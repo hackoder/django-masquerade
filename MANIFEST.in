@@ -1,0 +1,7 @@
+recursive-include doc_src *
+recursive-include docs *
+
+recursive-include masquerade/templates *
+
+include LICENSE
+include README
