@@ -4,6 +4,8 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from masquerade.forms import MaskForm
+from django.contrib.auth.models import User
+from masquerade.signals import start_masquerading, stop_masquerading
 
 START_MASQUERADE_REDIRECT_VIEW = getattr(settings, 'START_MASQUERADE_REDIRECT_VIEW', None)
 STOP_MASQUERADE_REDIRECT_VIEW = getattr(settings, 'STOP_MASQUERADE_REDIRECT_VIEW', None)
@@ -32,6 +34,7 @@ def mask(request, template_name='masquerade/mask_form.html'):
         if form.is_valid():
             # turn on masquerading
             request.session['mask_user'] = form.cleaned_data['mask_user']
+            start_masquerading.send(sender='Masquerade', request=request)
             return HttpResponseRedirect(get_start_redirect_url())
     else:
         form = MaskForm()
@@ -42,6 +45,7 @@ def mask(request, template_name='masquerade/mask_form.html'):
 def unmask(request):
     # Turn off masquerading. Don't bother checking permissions.
     try:
+        stop_masquerading.send(sender='Masquerade', request=request)
         del(request.session['mask_user']) 
     except KeyError:
         pass
